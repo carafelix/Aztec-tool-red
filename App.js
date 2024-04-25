@@ -36,10 +36,10 @@ export default function App() {
         <ImagePickerExample onImageSelect={handleImgSelect} />
         <Button
           onPress={async (e) => {
-            let _time = time
-            if(isRecalcTimeChecked){
-              _time = getReverseTimeHex(new Date())
-              setTime( _time );
+            let _time = time;
+            if (isRecalcTimeChecked) {
+              _time = getReverseTimeHex(new Date());
+              setTime(_time);
             }
 
             const aztec = await bwipjs.toDataURL({
@@ -50,8 +50,6 @@ export default function App() {
           }}
           title="write"
         />
-      </View>
-      <View style={styles.buttonContainer}>
         <TimePicker onTimeChange={handleTimeChangeFromPicker} />
         <CheckBox
           title={'Recalc Time?'}
@@ -92,7 +90,13 @@ export default function App() {
           value={checksum}
           onChangeText={(value) => setChecksum(value)}
         />
-        <View style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+        <View
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
           <Button
             title="Reset checksum"
             onPress={() => setChecksum('0'.repeat(118))}
@@ -121,14 +125,18 @@ const styles = StyleSheet.create({
     margin: 30,
   },
   buttonContainer: {
+    display: 'flex',
     flexDirection: 'row',
-    gap: 10,
-    margin: 10,
+    alignSelf: 'stretch',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    columnGap: 80,
+    margin: 5,
+    flexWrap: 'wrap'
   },
   inputContainer: {
+    display: 'flex',
     flexDirection: 'row',
-    textAlign: 'center',
     gap: 5,
     margin: 5,
   },
