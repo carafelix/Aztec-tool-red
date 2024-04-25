@@ -5,6 +5,7 @@ import bwipjs from 'bwip-js';
 import ImagePickerExample from './components/imgPicker';
 import { FloatingLabelInput } from 'react-native-floating-label-input';
 import { TimePicker } from './components/timePicker';
+import { CheckBox } from '@rneui/themed';
 
 export default function App() {
   //#region string State
@@ -12,8 +13,9 @@ export default function App() {
   const [signature, setSignature] = useState('0'.repeat(10));
   const [zeros, setZeros] = useState('6601' + '0'.repeat(32));
   const [time, setTime] = useState(getReverseTimeHex(new Date()));
+  const [isRecalcTimeChecked, setRecalcTimeChecked] = useState(false);
   const [quarter, setQuarter] = useState('0'.repeat(12));
-  const [noise, setNoise] = useState('0'.repeat(118));
+  const [checksum, setChecksum] = useState('0'.repeat(118));
 
   //#endregion
 
@@ -21,7 +23,7 @@ export default function App() {
 
   const handleImgSelect = (value) => {
     setImg(value);
-    setTime(getReverseTimeHex(new Date()));
+    // setTime(getReverseTimeHex(new Date()));
   };
 
   const handleTimeChangeFromPicker = (date) => {
@@ -34,16 +36,28 @@ export default function App() {
         <ImagePickerExample onImageSelect={handleImgSelect} />
         <Button
           onPress={async (e) => {
-            setTime(getReverseTimeHex(new Date()))
+            let _time = time
+            if(isRecalcTimeChecked){
+              _time = getReverseTimeHex(new Date())
+              setTime( _time );
+            }
+
             const aztec = await bwipjs.toDataURL({
               bcid: 'azteccode',
-              text: [id, signature, zeros, time, quarter, noise].join(''),
+              text: [id, signature, zeros, _time, quarter, checksum].join(''),
             });
             setImg(aztec.uri);
           }}
           title="write"
         />
+      </View>
+      <View style={styles.buttonContainer}>
         <TimePicker onTimeChange={handleTimeChangeFromPicker} />
+        <CheckBox
+          title={'Recalc Time?'}
+          checked={isRecalcTimeChecked}
+          onPress={() => setRecalcTimeChecked(!isRecalcTimeChecked)}
+        />
       </View>
 
       <View style={styles.inputContainer}>
@@ -74,13 +88,21 @@ export default function App() {
 
       <View style={styles.inputContainer}>
         <FloatingLabelInput
-          label={'Noise'}
-          value={noise}
-          onChangeText={(value) => setNoise(value)}
+          label={'Checksum'}
+          value={checksum}
+          onChangeText={(value) => setChecksum(value)}
         />
+        <View style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+          <Button
+            title="Reset checksum"
+            onPress={() => setChecksum('0'.repeat(118))}
+          />
+        </View>
       </View>
 
-      {(img && <Image source={{ uri: img }} style={styles.image} />) || <Image style={styles.image}/>}
+      {(img && <Image source={{ uri: img }} style={styles.image} />) || (
+        <Image style={styles.image} />
+      )}
 
       <StatusBar style="auto" />
     </View>
@@ -96,15 +118,17 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200,
-    margin: 5,
+    margin: 30,
   },
   buttonContainer: {
     flexDirection: 'row',
     gap: 10,
     margin: 10,
+    alignItems: 'center',
   },
   inputContainer: {
     flexDirection: 'row',
+    textAlign: 'center',
     gap: 5,
     margin: 5,
   },
@@ -123,6 +147,6 @@ function getHexSections(str) {
     str.slice(26, 62), // year-byte and 0's
     str.slice(62, 70), // time
     str.slice(70, 82), // quarter?
-    str.slice(82), // noise / unkown
+    str.slice(82), // noise / checksum
   ];
 }
