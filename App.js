@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { View, Button, StyleSheet, Text, Image, TextInput } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import 'react-zlib-js';
 import bwipjs from 'bwip-js';
 import ImagePickerExample from './components/imgPicker';
 import { FloatingLabelInput } from 'react-native-floating-label-input';
@@ -115,4 +114,15 @@ function getReverseTimeHex(date) {
   const currTime = Math.floor(date.getTime() / 1000).toString(16);
   const reversed = currTime.match(/.{2}/g).reverse().join('');
   return reversed.toUpperCase();
+}
+
+function getHexSections(str) {
+  return [
+    str.slice(0, 16), // ID
+    str.slice(16, 26), // (Daily?) Signature
+    str.slice(26, 62), // year-byte and 0's
+    str.slice(62, 70), // time
+    str.slice(70, 82), // quarter?
+    str.slice(82), // noise / unkown
+  ];
 }
