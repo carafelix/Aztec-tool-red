@@ -25,7 +25,7 @@ export default function App() {
     setTime(getReverseTimeHex(new Date()));
   };
 
-  const handleTimeChange = (date) => {
+  const handleTimeChangeFromPicker = (date) => {
     setTime(getReverseTimeHex(date));
   };
 
@@ -44,7 +44,7 @@ export default function App() {
           }}
           title="write"
         />
-        <TimePicker onTimeChange={handleTimeChange} />
+        <TimePicker onTimeChange={handleTimeChangeFromPicker} />
       </View>
 
       <View style={styles.inputContainer}>
