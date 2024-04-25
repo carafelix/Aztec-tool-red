@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     columnGap: 80,
-    margin: 5,
+    margin: 10,
     flexWrap: 'wrap'
   },
   inputContainer: {
