@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import { View, Button, StyleSheet, Text, Image, TextInput } from 'react-native';
+import { useState, useRef } from 'react';
+import { View, Button, StyleSheet, Text, Image, TextInput, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import bwipjs from 'bwip-js';
-import ImagePickerExample from './components/imgPicker';
+import ImagePicker from './components/imgPicker';
 import { FloatingLabelInput } from 'react-native-floating-label-input';
 import { TimePicker } from './components/timePicker';
 import { CheckBox } from '@rneui/themed';
@@ -13,17 +13,21 @@ export default function App() {
   const [signature, setSignature] = useState('0'.repeat(10));
   const [zeros, setZeros] = useState('6601' + '0'.repeat(32));
   const [time, setTime] = useState(getReverseTimeHex(new Date()));
-  const [isRecalcTimeChecked, setRecalcTimeChecked] = useState(false);
   const [quarter, setQuarter] = useState('0'.repeat(12));
   const [checksum, setChecksum] = useState('0'.repeat(118));
+
+  const [fullString, setFull] = useState(
+    [id, signature, zeros, time, quarter, checksum].join('')
+  );
+
+  const [isRecalcTimeChecked, setRecalcTimeChecked] = useState(false);
 
   //#endregion
 
   const [img, setImg] = useState(null);
 
-  const handleImgSelect = (value) => {
+  const handleImgSelect = async (value) => {
     setImg(value);
-    // setTime(getReverseTimeHex(new Date()));
   };
 
   const handleTimeChangeFromPicker = (date) => {
@@ -33,7 +37,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.buttonContainer}>
-        <ImagePickerExample onImageSelect={handleImgSelect} />
+        <ImagePicker onImageSelect={handleImgSelect} />
         <Button
           onPress={async (e) => {
             let _time = time;
@@ -59,15 +63,12 @@ export default function App() {
       </View>
 
       <View style={styles.inputContainer}>
-        <FloatingLabelInput
-          label={'ID'}
-          value={id}
-          onChangeText={(value) => setID(value)}
-        />
-        <FloatingLabelInput
+        <InputWrapper label={'ID'} value={id} setValue={setID} />
+
+        <InputWrapper
           label={'Firma'}
           value={signature}
-          onChangeText={(value) => setSignature(value)}
+          setValue={setSignature}
         />
       </View>
 
@@ -77,29 +78,39 @@ export default function App() {
           value={time}
           editable={false}
         />
-        <FloatingLabelInput
-          label="Quarter"
-          value={quarter}
-          onChangeText={(value) => setQuarter(value)}
+        <InputWrapper label={'Quarter'} value={quarter} setValue={setQuarter} />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <InputWrapper
+          label={'Checksum'}
+          value={checksum}
+          setValue={setChecksum}
         />
       </View>
 
       <View style={styles.inputContainer}>
-        <FloatingLabelInput
-          label={'Checksum'}
-          value={checksum}
-          onChangeText={(value) => setChecksum(value)}
-        />
-        <View
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
+        <InputWrapper label={'Full'} value={fullString} setValue={setFull} />
+        <View style = {styles.buttonContainer}>
           <Button
-            title="Reset checksum"
-            onPress={() => setChecksum('0'.repeat(118))}
+            title="Input from Full"
+            onPress={() => {
+              try {
+                if(fullString.length !== 200){
+                  throw new Error('Miss Input:\nString length must be exactly 200.')
+                }
+
+                const full = getHexSections(fullString);
+                setID(full[0]);
+                setSignature(full[1]);
+                setZeros(full[2]);
+                setTime(full[3]);
+                setQuarter(full[4]);
+                setChecksum(full[5]);
+              } catch (err){
+                Alert.alert(err.message)
+              }
+            }}
           />
         </View>
       </View>
@@ -110,6 +121,36 @@ export default function App() {
 
       <StatusBar style="auto" />
     </View>
+  );
+}
+
+function InputWrapper({ label, value, setValue }) {
+  const timerRef = useRef(null);
+
+  const handlePressIn = () => {
+    timerRef.current = setTimeout(() => {
+      handleLongPress();
+    }, 2000);
+  };
+
+  const handlePressOut = () => {
+    clearTimeout(timerRef.current);
+  };
+
+  const handleLongPress = () => {
+    setValue('0'.repeat(value.length));
+  };
+
+  return (
+    <>
+      <FloatingLabelInput
+        label={label}
+        value={value}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onChangeText={(v) => setValue(v)}
+      />
+    </>
   );
 }
 
@@ -132,7 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     columnGap: 80,
     margin: 10,
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
   },
   inputContainer: {
     display: 'flex',
@@ -144,8 +185,11 @@ const styles = StyleSheet.create({
 
 function getReverseTimeHex(date) {
   const currTime = Math.floor(date.getTime() / 1000).toString(16);
-  const reversed = currTime.match(/.{2}/g).reverse().join('');
-  return reversed.toUpperCase();
+  return reverseStringBytes(currTime)
+}
+
+function reverseStringBytes(str){
+  return str.match(/.{2}/g).reverse().join('').toUpperCase();
 }
 
 function getHexSections(str) {
@@ -153,7 +197,7 @@ function getHexSections(str) {
     str.slice(0, 16), // ID
     str.slice(16, 26), // (Daily?) Signature
     str.slice(26, 62), // year-byte and 0's
-    str.slice(62, 70), // time
+    reverseStringBytes(str.slice(62, 70)), // time
     str.slice(70, 82), // quarter?
     str.slice(82), // noise / checksum
   ];

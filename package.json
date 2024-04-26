@@ -15,6 +15,8 @@
     "@rneui/themed": "^4.0.0-rc.8",
     "@types/react": "~18.2.45",
     "@zxing/library": "^0.20.0",
+    "barcode-detector": "^2.2.5",
+    "barcode-tool": "^1.1.1",
     "base-64": "^1.0.0",
     "bwip-js": "^4.3.2",
     "expo": "~50.0.14",
