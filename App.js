@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { View, Button, StyleSheet, Text, Image, TextInput, Alert } from 'react-native';
+import { View, Button, StyleSheet, Image, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import bwipjs from 'bwip-js';
 import ImagePicker from './components/imgPicker';
